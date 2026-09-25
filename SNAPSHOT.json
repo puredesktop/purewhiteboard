@@ -1,0 +1,14 @@
+{
+  "sourceRepository": "https://github.com/Nikau-Dev/purewhiteboard",
+  "sourceCommit": "242ee3cf816421cc23bb8635ea0305510cc01a4f",
+  "sourceBranch": "main",
+  "snapshotDate": "2026-09-25",
+  "historyIncluded": false,
+  "changes": [
+    "README licensing, attribution, and contribution information",
+    "Contribution guide and third-party notices",
+    "MIT license for original app code except MPL-covered PureCut",
+    "Preserved upstream licenses; added missing font notices where bundled",
+    "Removed bundled demo data and development records; sanitized personal examples and machine paths"
+  ]
+}

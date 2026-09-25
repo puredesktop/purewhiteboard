@@ -1,0 +1,317 @@
+{
+  "id": "whiteboard",
+  "name": "PureWhiteboard",
+  "permissions": [
+    "settings",
+    "agents",
+    "filesystem"
+  ],
+  "entrypoint": {
+    "kind": "dev-url",
+    "url": "http://localhost:7106"
+  },
+  "app": {
+    "id": "plugin.whiteboard",
+    "slug": "whiteboard",
+    "name": "PureWhiteboard",
+    "navigationLabel": "Whiteboard",
+    "productName": "ps.whiteboard",
+    "kind": "desktop",
+    "description": "Sketch and diagram on an Excalidraw canvas; boards are saved as .whiteboard packages and export to PNG.",
+    "usePureDesktopAiPanel": true,
+    "openableFileKinds": [
+      "folder"
+    ],
+    "openableNameSuffixes": [
+      ".whiteboard"
+    ],
+    "createEntities": [
+      {
+        "id": "whiteboard-package",
+        "label": "Whiteboard",
+        "description": "Create a new whiteboard package.",
+        "kind": "package",
+        "appSlug": "whiteboard",
+        "defaultName": "Untitled whiteboard",
+        "packageSuffix": ".whiteboard",
+        "packageManifestFile": "manifest.json",
+        "packageContentFile": "whiteboard.whiteboard.json",
+        "packageAssetsDir": "assets",
+        "template": "{\n  \"schemaVersion\": 1,\n  \"type\": \"whiteboard.scene\",\n  \"elements\": [],\n  \"appState\": {\n    \"viewBackgroundColor\": \"#ffffff\"\n  },\n  \"files\": {}\n}\n"
+      }
+    ],
+    "brand": {
+      "letter": "w",
+      "label": "Whiteboard"
+    },
+    "agents": {
+      "tools": [
+        {
+          "name": "createWhiteboard",
+          "description": "Create and open a separate saved whiteboard in the workspace Drafts folder. This is the normal output location; source fixture folders need not hold outputs. Returns its real packagePath without clearing prior work.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "openWhiteboard",
+          "risk": "read",
+          "description": "Validate and open an existing whiteboard package. Returns its real packagePath.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "saveWhiteboard",
+          "description": "Flush the current scene to disk and validate the saved scene; returns packagePath.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "packagePath"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "getWhiteboardContext",
+          "risk": "read",
+          "description": "Read the current whiteboard: elementCount, selectedElementIds, and the elements with id, type, position, size, text (a free text, or the label of a shape or arrow), from/to (the ids an arrow is bound to) and colors. Call this first \u2014 connect, styleElement and removeElement need ids from it; labels attached to a shape are reported on the shape, not as separate elements.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "addShape",
+          "description": "Add a rectangle, ellipse or diamond, optionally labelled. x/y/width/height are in scene units; when x and y are omitted the shape is placed to the right of the existing content. Returns the new id.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "rectangle",
+                  "ellipse",
+                  "diamond"
+                ]
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string"
+              },
+              "backgroundColor": {
+                "type": "string",
+                "description": "Hex fill, named Excalidraw color, or transparent."
+              },
+              "strokeColor": {
+                "type": "string"
+              },
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "shape",
+              "packagePath"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "addText",
+          "description": "Add a free text label. When x and y are omitted it is placed to the right of the existing content. Returns the new id.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "fontSize": {
+                "type": "number"
+              },
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "text",
+              "packagePath"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "connect",
+          "description": "Draw an arrow bound to two existing elements by id (shapes, text or images \u2014 not another arrow), optionally labelled. Bound arrows follow their elements when the user moves them. Place both ends before connecting.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "fromId": {
+                "type": "string"
+              },
+              "toId": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "fromId",
+              "toId",
+              "packagePath"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "styleElement",
+          "description": "Restyle one element by id: backgroundColor (hex, Excalidraw color name, or \"transparent\"), strokeColor, strokeWidth in px, opacity 0-100. At least one of the four is required; position, size and text are the user's to edit on the canvas.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "backgroundColor": {
+                "type": "string"
+              },
+              "strokeColor": {
+                "type": "string"
+              },
+              "strokeWidth": {
+                "type": "number"
+              },
+              "opacity": {
+                "type": "number"
+              },
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "id",
+              "packagePath"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "removeElement",
+          "risk": "destructive",
+          "description": "Delete one element by id, together with its label; arrows attached to it stay but are unbound from it. Only at the user's direction.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "id",
+              "packagePath"
+            ]
+          },
+          "requiresApproval": true
+        },
+        {
+          "name": "clearWhiteboard",
+          "risk": "destructive",
+          "description": "Erase every element. Refuses while the board holds work unless confirm is true \u2014 pass it only when the user asked to start over. The user can undo with \u2318Z in the canvas.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "confirm": {
+                "type": "boolean",
+                "description": "Must be true to erase a board that holds elements."
+              },
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "packagePath"
+            ]
+          },
+          "requiresApproval": true
+        },
+        {
+          "name": "exportImage",
+          "risk": "external",
+          "description": "Export the whole board as a PNG into the package's assets/exports folder (saving the board first if it has never been saved). Returns the file path. Refuses when the board is empty.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "filename": {
+                "type": "string",
+                "description": "Optional file name; \".png\" is added when missing. Defaults to the last export name."
+              },
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
+              }
+            },
+            "required": [
+              "packagePath"
+            ]
+          },
+          "requiresApproval": true
+        }
+      ]
+    }
+  }
+}
