@@ -2,9 +2,25 @@
 
 # purewhiteboard
 
-## What purewhiteboard does
+**Sketch ideas and draw connected diagrams.** An app for [puredesktop](https://puredesktop.ai).
+
+[Get started](#getting-started) · [App guide](docs/app-guide.md) · [Develop](docs/development.md) · [Developer account](https://puredesktop.ai/developers)
+
+## What it does
 
 A sketching and diagramming workspace built on Excalidraw. Combine shapes, text, arrows, and freehand drawing, save editable boards, and export PNG images for sharing.
+
+## Requirements
+
+Use a compatible [puredesktop](https://puredesktop.ai) build for desktop integration, storage, and the app drawer. Developer setup is covered in the [development guide](docs/development.md).
+
+Create or open a board in the desktop. Agent assistance uses the host’s configured agent service.
+
+## Getting started
+
+1. Create or open a board and add shapes, text, arrows, and freehand marks.
+2. Move and style elements to organize the diagram.
+3. Save the editable board as a `.whiteboard` package; export PNG when you need a shareable image.
 
 ## App layout
 
@@ -17,31 +33,45 @@ A sketching and diagramming workspace built on Excalidraw. Combine shapes, text,
 
 The app also uses the shared [puredesktop](https://puredesktop.ai) shell and drawer agent. Panels can vary with the current view and selection.
 
-## Getting started
+## Working with the agent
 
-1. Create or open a board and add shapes, text, arrows, and freehand marks.
-2. Move and style elements to organize the diagram.
-3. Save the editable board as a `.whiteboard` package; export PNG when you need a shareable image.
+Open the app’s drawer in [puredesktop](https://puredesktop.ai) and describe what you want to do. For example:
 
-Read the [app guide](docs/app-guide.md) for development, loading, and source-layout details.
+> Add three labeled steps and connect them with arrows.
+>
+> Export this board as a PNG.
+
+The app exposes 11 tools, including `openWhiteboard`, `getWhiteboardContext`. See [agents.md](agents.md) for workflows and [plugin.json](plugin.json) for the complete tool schemas and approval flags. Adding shapes and text can apply directly; removal, clearing, and export are approval-marked tools.
+
+## Files and data
+
+Save editable `.whiteboard` packages and export PNG images. A PNG is a presentation output; keep the package to continue editing elements.
 
 ## Develop and customize
 
-We welcome **developers and vibecoders alike**. You can add features to purewhiteboard, develop a fork, or create a new app for [puredesktop](https://puredesktop.ai).
+We welcome **developers and vibecoders alike**. Fork purewhiteboard, add a feature, or use what you learn to build a new app.
 
-### Use Claude Code, Codex, or your own tools
+| Develop your way | Workflow |
+| --- | --- |
+| **Claude Code, Codex, or your editor** | Open the app’s source folder, read `README.md`, `plugin.json`, `package.json`, and `agents.md`, then make changes and run the app’s checks. Test inside [puredesktop](https://puredesktop.ai) with matching shared platform packages. |
+| **purefactory** | Choose **Start building** for a new app, or select an available app project to extend it. Use **Open folder** for external tools and **Open app** to test. |
+| **App drawer** | Request a local app change where app-development integration is available. Make clear whether you want to change the app itself or its current document. |
 
-Open a local source checkout or a purefactory project's folder in your preferred coding tool. Ask it to read this README, `plugin.json`, `package.json`, `agents.md`, and the [development guide](docs/development.md) before making changes. Review the changes, run the app's checks, and test it inside [puredesktop](https://puredesktop.ai). This source may require matching shared platform packages; a browser preview alone does not provide desktop services.
+Use **Share** in purefactory to create a `.pureapp` package, then **Settings → System → Install an app → Choose package…** to load it in current builds. Source availability and integration vary by host build.
 
-The [development guide](docs/development.md) explains how to start Claude Code or Codex in the project, work on this repository, and load your app into the desktop.
+Follow the [development guide](docs/development.md) for Claude Code/Codex commands, app-specific setup and checks, and packaging. A standalone browser preview does not provide every desktop service.
 
-### Use purefactory inside the desktop
+## Documentation and limitations
 
-Open **purefactory** (Factory) to describe a new app, or select an available app project and request a feature. Use **Open folder** to continue with external tools and **Open app** to test the result. You can also request a local app change through the app's drawer where app-development integration is available; distinguish changing the app from editing its current document.
+| Guide | What it covers |
+| --- | --- |
+| [App guide](docs/app-guide.md) | App overview, source layout, and usage. |
+| [Development guide](docs/development.md) | External coding tools, purefactory, checks, and installation. |
+| [Agent guide](agents.md) | App-specific agent workflows and constraints. |
 
-Use **Share** in purefactory to create a `.pureapp` package. In current builds, install it through **Settings → System → Install an app → Choose package…**. See the [development guide](docs/development.md#load-and-share-your-app) for the full workflow and version differences.
+Agent styling covers supported element properties; arrange and resize elements on the canvas. Export requires a non-empty board.
 
-## Developer accounts and the marketplace
+## Contributing and marketplace
 
 We welcome **developers and vibecoders alike**. Go to [puredesktop.ai](https://puredesktop.ai) and [create a developer account](https://puredesktop.ai/developers) to join the developer community and submit your app for review.
 
@@ -49,13 +79,11 @@ Bring improvements to this app, develop a fork, or build something entirely new.
 
 For developer access, app submissions, or marketplace questions, contact [info@puredesktop.ai](mailto:info@puredesktop.ai).
 
-## Open source and contributions
+Anyone may use, study, modify, and share this app under its applicable licenses. We welcome pull requests, bug reports, and documentation improvements. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Credits and license
 
 A whiteboard app based on the open-source [Excalidraw](https://github.com/excalidraw/excalidraw) project (MIT).
-
-Anyone may use, study, modify, and share this software under the applicable licenses.
-We welcome pull requests, bug reports, documentation improvements, and new ideas.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute.
 
 ### License
 
