@@ -236,7 +236,7 @@ const CanvasHost = styled.main`
     width: 32px;
     height: 32px;
     /* Centred on the tool island beside it. */
-    margin: 6px 0 0 10px;
+    margin: 7px 0 0 10px;
     border: 1px solid var(--pure-chrome-line);
     border-radius: var(--pure-chrome-radius);
     background: var(--pure-chrome-surface);
