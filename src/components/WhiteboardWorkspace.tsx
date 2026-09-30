@@ -230,6 +230,29 @@ const CanvasHost = styled.main`
     padding: 3px 18px;
   }
 
+  /* The main menu button: inset from the edge (the top row is pulled out by
+     16px) and drawn as a platform control, not Excalidraw's grey square. */
+  .excalidraw .main-menu-trigger {
+    width: 32px;
+    height: 32px;
+    /* Centred on the tool island beside it. */
+    margin: 7px 0 0 10px;
+    border: 1px solid var(--pure-chrome-line);
+    border-radius: var(--pure-chrome-radius);
+    background: var(--pure-chrome-surface);
+    box-shadow: none;
+    color: var(--platform-colors-text);
+  }
+
+  .excalidraw .main-menu-trigger:hover {
+    background: var(--pure-chrome-hover);
+  }
+
+  .excalidraw .main-menu-trigger svg {
+    width: 16px;
+    height: 16px;
+  }
+
   .excalidraw .layer-ui__wrapper__top-right {
     box-sizing: border-box;
     right: auto;
