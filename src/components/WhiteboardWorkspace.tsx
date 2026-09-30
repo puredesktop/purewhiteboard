@@ -235,7 +235,8 @@ const CanvasHost = styled.main`
   .excalidraw .main-menu-trigger {
     width: 32px;
     height: 32px;
-    margin-left: 10px;
+    /* Centred on the tool island beside it. */
+    margin: 6px 0 0 10px;
     border: 1px solid var(--pure-chrome-line);
     border-radius: var(--pure-chrome-radius);
     background: var(--pure-chrome-surface);
