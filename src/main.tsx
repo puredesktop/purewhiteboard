@@ -1,4 +1,10 @@
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { WhiteNeutral } from './whiteNeutral'
 
-createRoot(document.getElementById('root') as HTMLElement).render(<App />)
+createRoot(document.getElementById('root') as HTMLElement).render(
+  <>
+    <WhiteNeutral />
+    <App />
+  </>,
+)
