@@ -1022,12 +1022,13 @@ export function WhiteboardWorkspace({
       <Root data-app="whiteboard">
         <Header aria-hidden="true" />
         {/* Agent activity: the board's tools name it by packagePath (openWhiteboard by path).
-            Its elements are drawn on Excalidraw's canvas, so they cannot carry tags of their own. */}
+            Its elements are drawn on Excalidraw's canvas, so they cannot carry tags of their own.
+            It is also the open surface (@open), where a write that names no element lands. */}
         <CanvasHost
           data-agent-ref={
             packagePath
-              ? [packagePath, `packagePath:${packagePath}`, `path:${packagePath}`].join(' ')
-              : undefined
+              ? [packagePath, `packagePath:${packagePath}`, `path:${packagePath}`, '@open'].join(' ')
+              : '@open'
           }
           data-agent-label={packagePath ? packageName : undefined}
         >
