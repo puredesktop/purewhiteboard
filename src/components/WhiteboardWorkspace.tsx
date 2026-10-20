@@ -1021,7 +1021,16 @@ export function WhiteboardWorkspace({
     >
       <Root data-app="whiteboard">
         <Header aria-hidden="true" />
-        <CanvasHost>
+        {/* Agent activity: the board's tools name it by packagePath (openWhiteboard by path).
+            Its elements are drawn on Excalidraw's canvas, so they cannot carry tags of their own. */}
+        <CanvasHost
+          data-agent-ref={
+            packagePath
+              ? [packagePath, `packagePath:${packagePath}`, `path:${packagePath}`].join(' ')
+              : undefined
+          }
+          data-agent-label={packagePath ? packageName : undefined}
+        >
           {!current ? (
             <CanvasPlaceholder>Loading whiteboard</CanvasPlaceholder>
           ) : current.error ? (
