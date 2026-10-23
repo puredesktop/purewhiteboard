@@ -994,6 +994,19 @@ export function WhiteboardWorkspace({
         { name: 'manifest.json', content: serializeWhiteboardPackageManifest(manifest) },
       ] }
     },
+    // Let go by the live copy: the board on screen is saved as it always was, so a shape drawn just before is kept.
+    onEnded: () => {
+      const api = apiRef.current
+      const bound = boundRef.current
+      if (!api || !bound || !saveReadyRef.current) return
+      pendingRef.current = {
+        packagePath: bound.packagePath,
+        snapshot: { elements: api.getSceneElements(), appState: api.getAppState?.(), files: api.getFiles?.() },
+      }
+      flushPendingSave().catch(error => {
+        setStatus(`Could not save: ${errorMessage(error)}`)
+      })
+    },
   })
   const liveRef = useRef(live)
   liveRef.current = live
