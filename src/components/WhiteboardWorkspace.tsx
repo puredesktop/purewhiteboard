@@ -4,6 +4,8 @@ import {
   DocumentSwitcher,
 } from '@purescience/platform-ui/components/common/documents'
 import { useDocumentLifecycle } from '@purescience/platform-ui/bridge/react/useDocumentLifecycle'
+import { useLiveJson } from '@purescience/platform-ui/editing/live/useLiveJson'
+import { CaptureUpdateAction } from '@excalidraw/excalidraw'
 import { bindWhiteboardDocument } from '../lib/bindWhiteboardDocument'
 import {
   createPlatformDraft,
@@ -962,6 +964,40 @@ export function WhiteboardWorkspace({
     open,
   })
 
+  // A board the organisation shares, edited live (useLiveJson): everyone's shapes merged shape by shape; the live
+  // copy writes the board's files, so this tab stops writing them itself while live.
+  const livePath = current?.scene !== undefined && current?.error == null ? resolveWhiteboardScenePath(packagePath) : null
+  const live = useLiveJson(livePath, {
+    loadSaved: async path => {
+      const raw = await readOptionalTextFile(readTextFile, path)
+      return raw ? (parseWhiteboardScene(raw) as unknown as Record<string, unknown>) : { elements: [] }
+    },
+    onRemote: next => {
+      const api = apiRef.current
+      if (!api) return
+      const elements = (Array.isArray(next.elements) ? next.elements : []) as WhiteboardElementLike[]
+      const appState = (next.appState && typeof next.appState === 'object' ? next.appState : {}) as Record<string, unknown>
+      // Someone else's change: on screen, and not in this person's own undo.
+      fingerprintRef.current = whiteboardSceneFingerprint(elements, appState)
+      api.updateScene({ elements, appState: { viewBackgroundColor: appState.viewBackgroundColor ?? undefined }, captureUpdate: CaptureUpdateAction.NEVER })
+      const files = next.files && typeof next.files === 'object' ? Object.values(next.files as Record<string, unknown>) : []
+      if (files.length) (api as unknown as { addFiles?: (files: unknown[]) => void }).addFiles?.(files)
+    },
+    serialize: () => {
+      const api = apiRef.current
+      const bound = boundRef.current
+      if (!api || !bound) return null
+      const scene = createWhiteboardSceneDocument({ elements: api.getSceneElements(), appState: api.getAppState?.(), files: api.getFiles?.() })
+      const manifest = createWhiteboardPackageManifest(bound.packagePath, scene, bound.manifest)
+      return { resourcePath: bound.packagePath, files: [
+        { name: 'whiteboard.whiteboard.json', content: serializeWhiteboardScene(scene) },
+        { name: 'manifest.json', content: serializeWhiteboardPackageManifest(manifest) },
+      ] }
+    },
+  })
+  const liveRef = useRef(live)
+  liveRef.current = live
+
   const handleChange = useCallback(
     (...args: Parameters<NonNullable<ExcalidrawProps['onChange']>>) => {
       const [elements, appState, files] = args
@@ -977,6 +1013,18 @@ export function WhiteboardWorkspace({
       )
       if (fingerprint === fingerprintRef.current) return
       fingerprintRef.current = fingerprint
+      // Live: the change goes to everyone, and the live copy writes the board when it is time.
+      if (liveRef.current.status === 'on') {
+        const state = appState as unknown as Record<string, unknown>
+        liveRef.current.write(JSON.parse(JSON.stringify({
+          schemaVersion: 1,
+          type: 'whiteboard.scene',
+          elements: whiteboardElements,
+          appState: { viewBackgroundColor: state.viewBackgroundColor ?? null, gridSize: state.gridSize ?? null },
+          files: files ?? {},
+        })))
+        return
+      }
       pendingRef.current = {
         packagePath: bound.packagePath,
         snapshot: {
