@@ -1,0 +1,35 @@
+/* Compact PureWhiteboard, held inside a page (useCompactInRoom). The frame carries data-compact-room only then, and every
+   rule here starts from it, so with compact off nothing in this file applies. Chrome is hidden, not removed: everything
+   stays mounted, so the board, its undo and the agent's tools live on. Full app gives it all back. */
+
+/* The app header, the status and export row, and the parts of the canvas's own chrome a box has no use for: its main menu
+   (clear canvas, background), the library, help. */
+[data-compact-room] > header,
+[data-compact-room] [data-compact='hide'],
+[data-compact-room] .excalidraw .main-menu-trigger,
+[data-compact-room] .excalidraw .layer-ui__wrapper__top-right,
+[data-compact-room] .excalidraw .help-icon {
+  display: none !important;
+}
+
+/* The board has the box: the tools over a slimmer top row, and zoom and undo in their corner. */
+[data-compact-room] [data-compact='root'] {
+  --whiteboard-header-height: 52px;
+}
+[data-compact-room] [data-compact='root'] > header {
+  min-height: 52px;
+}
+[data-compact-room] [data-compact='root'] .excalidraw .App-menu_top {
+  min-height: 52px;
+}
+
+/* Held inside an entry of the room: one surface, flat on the paper, with no second sheet. */
+html[data-held-in-room]:has([data-compact-room]),
+html[data-held-in-room]:has([data-compact-room]) body,
+html[data-held-in-room]:has([data-compact-room]) [data-compact-room] {
+  background: #ffffff;
+}
+html[data-held-in-room]:has([data-compact-room]) [data-compact='root'] {
+  --canvas: #ffffff;
+  --surface: #ffffff;
+}
