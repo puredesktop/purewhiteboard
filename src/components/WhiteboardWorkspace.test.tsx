@@ -12,6 +12,8 @@ const mock = vi.hoisted(() => ({
   documentChanged: null as any,
   elements: [] as any[],
   adopt: vi.fn(),
+  updateScene: vi.fn(),
+  scrollToContent: vi.fn(),
   bind: vi.fn(async () => undefined),
 }))
 vi.mock('../lib/bindWhiteboardDocument', () => ({
@@ -38,6 +40,16 @@ vi.mock('@purescience/platform-ui/bridge/documents.mjs', () => ({
   onPlatformDocumentsChanged: (listener: any) => {
     mock.documentChanged = listener
     return () => {}
+  },
+  autosavePlatformDocument: async (request: any) => {
+    if (mock.fail) throw new Error('disk full')
+    if (request.revision) {
+      const text = mock.files.get(`${request.path}/${request.revision.file}`)
+      const actual = text ? JSON.parse(text)[request.revision.field] ?? null : null
+      if (actual !== request.revision.expected) throw new Error('Save conflict: this document changed in another window.')
+    }
+    request.files.forEach((file: any) => mock.files.set(`${request.path}/${file.name}`, file.content))
+    return { savedAt: 'now' }
   },
   createPlatformDraft: async (request: any) => {
     const path = `/Drafts/Board ${++mock.count}.whiteboard`
@@ -85,6 +97,8 @@ vi.mock('@excalidraw/excalidraw', () => {
           getSceneElements: () => mock.elements,
           getAppState: () => ({}),
           getFiles: () => ({}),
+          updateScene: (scene: any) => { mock.updateScene(scene); mock.elements = [...scene.elements] },
+          scrollToContent: mock.scrollToContent,
         })
       }, [])
       return <div>Canvas</div>
@@ -102,6 +116,7 @@ vi.mock('@excalidraw/excalidraw', () => {
       Hints: { ToolbarHint: Empty },
     }),
     exportToBlob: vi.fn(),
+    CaptureUpdateAction: { NEVER: 'NEVER' },
   }
 })
 import { WhiteboardWorkspace } from './WhiteboardWorkspace'
@@ -200,4 +215,33 @@ it('follows browser renames without recreating the old package', async () => {
     false,
   )
   expect(mock.bind).toHaveBeenLastCalledWith(renamed)
+})
+
+it('takes in another copy\'s save: its shape comes onto the canvas and nothing is written back', async () => {
+  const scenePath = '/Drafts/Board 1.whiteboard/whiteboard.whiteboard.json'
+  await act(async () => { await mock.context.create('Board') })
+  const shape = (id: string) => ({ id, type: 'rectangle', x: 0, y: 0, version: 1, versionNonce: 1 })
+  mock.updateScene.mockClear()
+  mock.files.set(scenePath, JSON.stringify({ schemaVersion: 1, type: 'whiteboard.scene', elements: [shape('theirs')], appState: {}, files: {}, updatedAt: 'now', revision: 'other' }))
+  const before = mock.files.get(scenePath)
+  await act(async () => {
+    mock.documentChanged({ kind: 'content', path: scenePath })
+    await new Promise(resolve => setTimeout(resolve, 5))
+  })
+  expect(mock.updateScene.mock.calls.at(-1)?.[0].elements.map((element: any) => element.id)).toEqual(['theirs'])
+  expect(mock.files.get(scenePath)).toBe(before)
+})
+
+it('a save refused because another copy saved first merges and saves both', async () => {
+  const scenePath = '/Drafts/Board 1.whiteboard/whiteboard.whiteboard.json'
+  await act(async () => { await mock.context.create('Board') })
+  const shape = (id: string) => ({ id, type: 'rectangle', x: 0, y: 0, version: 1, versionNonce: 1 })
+  // Written with no revision yet in this copy's eyes: the other copy got there first.
+  mock.files.set(scenePath, JSON.stringify({ schemaVersion: 1, type: 'whiteboard.scene', elements: [shape('theirs')], appState: {}, files: {}, updatedAt: 'now', revision: 'other' }))
+  mock.elements = [shape('mine')]
+  await act(async () => {
+    mock.change(mock.elements, {}, {})
+    await mock.context.save()
+  })
+  expect(JSON.parse(mock.files.get(scenePath)!).elements.map((element: any) => element.id).sort()).toEqual(['mine', 'theirs'])
 })

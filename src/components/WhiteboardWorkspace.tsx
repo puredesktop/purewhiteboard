@@ -8,11 +8,13 @@ import { useLiveJson } from '@purescience/platform-ui/editing/live/useLiveJson'
 import { CaptureUpdateAction } from '@excalidraw/excalidraw'
 import { bindWhiteboardDocument } from '../lib/bindWhiteboardDocument'
 import {
+  autosavePlatformDocument,
   createPlatformDraft,
   onPlatformDocumentsChanged,
 } from '@purescience/platform-ui/bridge/documents.mjs'
-import { readOptionalTextFile } from '../lib/readOptionalTextFile'
 import { compactPart, useCompactInRoom } from '../hooks/useCompactInRoom'
+import { SharedScene } from '../lib/whiteboardSharedScene'
+import { readOptionalTextFile } from '../lib/readOptionalTextFile'
 import {
   Excalidraw,
   MainMenu,
@@ -495,20 +497,8 @@ async function readWhiteboardManifest(
   }
 }
 
-async function writeWhiteboardPackageFiles(
-  packagePath: string,
-  scene: WhiteboardSceneDocument,
-  manifest: WhiteboardPackageManifest,
-): Promise<void> {
-  await writeTextFile(
-    resolveWhiteboardScenePath(packagePath),
-    serializeWhiteboardScene(scene),
-  )
-  await writeTextFile(
-    resolveWhiteboardManifestPath(packagePath),
-    serializeWhiteboardPackageManifest(manifest),
-  )
-}
+const SCENE_FILE = 'whiteboard.whiteboard.json'
+const MANIFEST_FILE = 'manifest.json'
 
 async function blobToBytes(blob: Blob): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer())
@@ -560,6 +550,45 @@ export function WhiteboardWorkspace({
   const fingerprintRef = useRef('')
   // Writes to a package are serialized: never two autosaves racing.
   const writeChainRef = useRef<Promise<void>>(Promise.resolve())
+  // The manifest goes with the scene it describes; the scene file is what a second copy is compared on.
+  const manifestTextRef = useRef('')
+  const sharedSceneRef = useRef(
+    new SharedScene({
+      read: path => readOptionalTextFile(readTextFile, resolveWhiteboardScenePath(path)),
+      writeIfUnchanged: async (path, sceneText, expected) => {
+        await autosavePlatformDocument({
+          path,
+          files: [
+            { name: SCENE_FILE, content: sceneText },
+            { name: MANIFEST_FILE, content: manifestTextRef.current },
+          ],
+          revision: { file: SCENE_FILE, field: 'revision', expected },
+        })
+      },
+      writeNew: async (path, sceneText) => {
+        await writeTextFile(resolveWhiteboardScenePath(path), sceneText)
+        await writeTextFile(resolveWhiteboardManifestPath(path), manifestTextRef.current)
+      },
+    }),
+  )
+  // Set when a merge changed what a save wrote: what the board now holds is what a readback is checked against.
+  const mergedFingerprintRef = useRef<string | null>(null)
+
+  /** The merge of this copy's work and another's, on the canvas and out of this person's undo. */
+  const showScene = useCallback((scene: WhiteboardSceneDocument): void => {
+    const canvas = apiRef.current
+    if (!canvas) return
+    const fingerprint = whiteboardSceneFingerprint(scene.elements, scene.appState)
+    fingerprintRef.current = fingerprint
+    mergedFingerprintRef.current = fingerprint
+    canvas.updateScene({
+      elements: scene.elements,
+      appState: { viewBackgroundColor: scene.appState?.viewBackgroundColor ?? undefined },
+      captureUpdate: CaptureUpdateAction.NEVER,
+    } as never)
+    const files = Object.values(scene.files ?? {})
+    if (files.length) (canvas as unknown as { addFiles?: (files: unknown[]) => void }).addFiles?.(files)
+  }, [])
 
   const packageName = useMemo(
     () => whiteboardPackageBaseName(packagePath),
@@ -585,8 +614,10 @@ export function WhiteboardWorkspace({
         isBound ? bound?.manifest : null,
       )
       if (isBound) setStatus('Saving...')
+      manifestTextRef.current = serializeWhiteboardPackageManifest(manifest)
       try {
-        await writeWhiteboardPackageFiles(pending.packagePath, scene, manifest)
+        const saved = await sharedSceneRef.current.save(pending.packagePath, scene, Boolean(isBound && bound?.persisted))
+        if (saved.merged && boundRef.current?.packagePath === pending.packagePath) showScene(saved.scene)
       } catch (error) {
         if (!pendingRef.current) pendingRef.current = pending
         throw error
@@ -602,7 +633,39 @@ export function WhiteboardWorkspace({
     writeChainRef.current = next
     void next.catch(() => undefined)
     return next
-  }, [])
+  }, [showScene])
+
+  /**
+   * Another copy of the app saved this board. Bring what it did onto the canvas; if this copy has work the file does not,
+   * the merge goes back out as the next save. In the write queue, so it never crosses a save of this copy's.
+   */
+  const takeInOtherCopy = useCallback((path: string): void => {
+    const work = async (): Promise<void> => {
+      if (boundRef.current?.packagePath !== path || !saveReadyRef.current) return
+      const merged = await sharedSceneRef.current.takeIn(path, () => {
+        const canvas = apiRef.current
+        return createWhiteboardSceneDocument({
+          elements: canvas?.getSceneElements() ?? [],
+          appState: canvas?.getAppState?.(),
+          files: canvas?.getFiles?.(),
+        })
+      })
+      if (!merged || boundRef.current?.packagePath !== path) return
+      showScene(merged.scene)
+      if (!merged.unsaved && !pendingRef.current) return
+      pendingRef.current = {
+        packagePath: path,
+        snapshot: { elements: merged.scene.elements, appState: merged.scene.appState, files: merged.scene.files },
+      }
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = window.setTimeout(() => {
+        saveTimerRef.current = null
+        flushPendingSave().catch(error => setStatus(`Could not save: ${errorMessage(error)}`))
+      }, AUTOSAVE_DELAY_MS)
+    }
+    const next = writeChainRef.current.then(work, work)
+    writeChainRef.current = next.catch(() => undefined)
+  }, [flushPendingSave, showScene])
 
   useEffect(() => {
     let cancelled = false
@@ -652,6 +715,7 @@ export function WhiteboardWorkspace({
       if (cancelled) return
 
       boundRef.current = { packagePath, manifest, persisted }
+      sharedSceneRef.current.bindText(packagePath, raw, scene)
       fingerprintRef.current = whiteboardSceneFingerprint(
         scene.elements,
         scene.appState,
@@ -770,11 +834,12 @@ export function WhiteboardWorkspace({
       pendingRef.current.snapshot.elements,
       pendingRef.current.snapshot.appState,
     )
+    mergedFingerprintRef.current = null
     await flushPendingSave()
     const saved = parseWhiteboardScene(
       await readTextFile(resolveWhiteboardScenePath(bound.packagePath)),
     )
-    if (whiteboardSceneFingerprint(saved.elements, saved.appState) !== expected)
+    if (whiteboardSceneFingerprint(saved.elements, saved.appState) !== (mergedFingerprintRef.current ?? expected))
       throw new Error(
         'The saved whiteboard differs from the requested scene. Read it before retrying.',
       )
@@ -859,6 +924,7 @@ export function WhiteboardWorkspace({
         ) {
           if (pendingRef.current?.packagePath === bound.packagePath)
             pendingRef.current.packagePath = change.path
+          sharedSceneRef.current.retarget(bound.packagePath, change.path)
           bound.packagePath = change.path
           void open(change.path).catch(error => setStatus(errorMessage(error)))
         } else if (
@@ -874,9 +940,15 @@ export function WhiteboardWorkspace({
               'This whiteboard was deleted. Open another board from Documents.',
           })
           setStatus('Not saving')
+        } else if (
+          change.kind === 'content' &&
+          (change.path === bound.packagePath || change.path.startsWith(`${bound.packagePath}/`)) &&
+          liveRef.current.status !== 'on'
+        ) {
+          takeInOtherCopy(bound.packagePath)
         }
       }),
-    [open],
+    [open, takeInOtherCopy],
   )
 
   // Shared navigation tracks the loaded package; the scene queue remains

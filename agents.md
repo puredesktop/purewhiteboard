@@ -204,3 +204,5 @@ owner display names verbatim, including prefixes and suffixes. Do not shorten a
 name for visual neatness. Wrap or reposition labels to fit the full name. Read
 the saved scene text back and compare it with the actual upstream owner strings
 before export; a collision-free layout alone does not verify identity fidelity.
+
+Copies of this app can run side by side (a tab and one held inside a page). They merge each other's work on one board shape by shape, so a shape from the other copy can appear while you work; read the board again before replacing something you read earlier.

@@ -70,14 +70,39 @@ export class SharedScene {
     return text === null ? null : { scene: parseWhiteboardScene(text), revision: revisionIn(text) }
   }
 
-  /** As the workspace does today: the whole scene from this copy's memory, with no condition. */
-  async save(path: string, scene: WhiteboardSceneDocument, _persisted: boolean): Promise<SavedScene> {
-    await this.port.writeNew(path, serializeWhiteboardScene(scene))
-    return { scene, merged: false }
+  async save(path: string, scene: WhiteboardSceneDocument, persisted: boolean): Promise<SavedScene> {
+    let next = scene
+    let merged = false
+    for (let round = 0; round < SAVE_ROUNDS; round++) {
+      const revision = revisionOf(next)
+      const text = serializeWhiteboardScene({ ...next, [REVISION_FIELD]: revision } as WhiteboardSceneDocument)
+      try {
+        if (persisted && this.agreed?.path === path) await this.port.writeIfUnchanged(path, text, this.agreed.revision)
+        else await this.port.writeNew(path, text)
+        this.agreed = { path, scene: next, revision }
+        return { scene: next, merged }
+      } catch (error) {
+        if (!CONFLICT.test(String(error))) throw error
+        const seen = await this.look(path)
+        if (!seen) throw error
+        next = mergeScenes(this.agreed?.path === path ? this.agreed.scene : seen.scene, next, seen.scene)
+        this.agreed = { path, ...seen }
+        merged = true
+      }
+    }
+    throw new Error('This board keeps changing in another window. Your drawing is still here; try again.')
   }
 
-  /** As the workspace does today: only a rename or a delete is heard, never another copy's save. */
-  async takeIn(_path: string, _live: () => WhiteboardSceneDocument): Promise<{ scene: WhiteboardSceneDocument; unsaved: boolean } | null> {
-    return null
+  /**
+   * The other copy saved. The merge with what is on screen here, or null if there is nothing new. `unsaved` says this copy
+   * has work the file does not, so the merge has to be saved too.
+   */
+  async takeIn(path: string, live: () => WhiteboardSceneDocument): Promise<{ scene: WhiteboardSceneDocument; unsaved: boolean } | null> {
+    const seen = await this.look(path)
+    if (!seen || this.agreed?.path !== path || seen.revision === this.agreed.revision) return null
+    // What is on screen after the read: a stroke made while it was being read is part of this copy's work.
+    const scene = mergeScenes(this.agreed.scene, live(), seen.scene)
+    this.agreed = { path, ...seen }
+    return { scene, unsaved: revisionOf(scene) !== revisionOf(seen.scene) }
   }
 }
