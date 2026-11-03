@@ -12,6 +12,7 @@ import {
   onPlatformDocumentsChanged,
 } from '@purescience/platform-ui/bridge/documents.mjs'
 import { readOptionalTextFile } from '../lib/readOptionalTextFile'
+import { compactPart, useCompactInRoom } from '../hooks/useCompactInRoom'
 import {
   Excalidraw,
   MainMenu,
@@ -529,6 +530,9 @@ export function WhiteboardWorkspace({
   const [status, setStatus] = useState('Loading...')
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const [documentError, setDocumentError] = useState<string | null>(null)
+  const compact = useCompactInRoom()
+  const compactRef = useRef(compact)
+  compactRef.current = compact
   const workingDirectory = boot.prefs.workingDirectory ?? ''
   const [packagePath, setPackagePath] = useState(() =>
     normalizeWhiteboardPackagePath(
@@ -659,7 +663,8 @@ export function WhiteboardWorkspace({
           ? `Saved ${packageName}`
           : `New whiteboard — saved to ${packageName}${WHITEBOARD_PACKAGE_SUFFIX} on the first change`,
       )
-      void updateWhiteboardSettings({ packagePath }).catch(() => undefined)
+      // What a copy held in a page opens is not what the full app reopens next time.
+      if (!compactRef.current) void updateWhiteboardSettings({ packagePath }).catch(() => undefined)
     }
 
     void loadScene()
@@ -1062,6 +1067,13 @@ export function WhiteboardWorkspace({
     setApi(instance as ExcalidrawApi)
   }, [])
 
+  // Going into the box, the board is fitted to it, so all of it is there to read.
+  useEffect(() => {
+    if (!compact || !api) return
+    const shown = api.getSceneElements().filter(element => !element.isDeleted)
+    if (shown.length) api.scrollToContent?.(shown, { fit: 'contain', animate: false })
+  }, [compact, api])
+
   const handleExport = useCallback(() => {
     setStatus('Exporting...')
     exportPng().catch(error => {
@@ -1071,6 +1083,7 @@ export function WhiteboardWorkspace({
 
   return (
     <AppFrame
+      {...(compact ? { 'data-compact-room': '' } : undefined)}
       headerDocumentName={packageName}
       headerActions={
         <DocumentHeaderActions
@@ -1080,7 +1093,7 @@ export function WhiteboardWorkspace({
         />
       }
     >
-      <Root data-app="whiteboard">
+      <Root data-app="whiteboard" {...compactPart(compact, 'root')}>
         <Header aria-hidden="true" />
         {/* Agent activity: the board's tools name it by packagePath (openWhiteboard by path).
             Its elements are drawn on Excalidraw's canvas, so they cannot carry tags of their own.
@@ -1130,7 +1143,7 @@ export function WhiteboardWorkspace({
             <CanvasPlaceholder>Whiteboard unavailable</CanvasPlaceholder>
           )}
         </CanvasHost>
-        <Actions>
+        <Actions {...compactPart(compact, 'hide')}>
           <Meta role="status" title={packagePath}>{status}</Meta>
           <Button type="button" disabled={!api} onClick={handleExport}>Export PNG</Button>
         </Actions>
