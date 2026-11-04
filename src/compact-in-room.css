@@ -33,3 +33,133 @@ html[data-held-in-room]:has([data-compact-room]) [data-compact='root'] {
   --canvas: #ffffff;
   --surface: #ffffff;
 }
+
+/* The held look: one white surface edge to edge, hairlines instead of boxes, 3px corners, 13px and 12px type in sentence case,
+   one muted navy for what is selected. The drawing is the user's: its colours and the board itself are left alone, and only
+   the chrome around it is calmed. Tokens sit on the frame so they outrank the app's own values on the page root. */
+[data-compact-room] {
+  --platform-colors-bg: #ffffff;
+  --platform-colors-app-viewport: #ffffff;
+  --platform-colors-surface: #ffffff;
+  --platform-colors-surface-hover: #f5f6f8;
+  --platform-colors-border: #dde1e7;
+  --glass-panel: #ffffff;
+  --pure-chrome-surface: #ffffff;
+  --pure-chrome-sidebar: #ffffff;
+  --pure-chrome-bar: #ffffff;
+  --pure-chrome-well: #f5f6f8;
+  --pure-chrome-hover: #f5f6f8;
+  --pure-chrome-line: #dde1e7;
+  --pure-chrome-muted: #5d6674;
+  --pure-chrome-radius: 3px;
+  --pure-chrome-ui-size: 13px;
+  background: #ffffff;
+}
+html[data-held-in-room]:has([data-compact-room]):not(#_) body {
+  background: #ffffff !important;
+}
+[data-compact-room] [data-compact='root']:not(#_) {
+  --app-acc: #2f5d8c;
+  --app-bg: #eef0f3;
+  --app-text: #1f3a5f;
+  --app-block: #1f3a5f;
+  --canvas: #ffffff;
+  --surface: #ffffff;
+}
+[data-compact-room] [data-compact='root'] > header {
+  padding-top: 0;
+  padding-bottom: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #dde1e7;
+}
+[data-compact-room] [data-compact='root'] .excalidraw:not(#_) {
+  --border-radius-md: 3px;
+  --border-radius-lg: 3px;
+  --island-bg-color: #ffffff;
+  --color-surface-low: #ffffff;
+  --color-surface-mid: #f5f6f8;
+  --color-slider-track: #dde1e7;
+  --color-slider-thumb: #2f5d8c;
+  --button-gray-1: #f5f6f8;
+  --button-gray-2: #eef0f3;
+  --button-gray-3: #e4e7ec;
+  --color-primary-light-darker: #e4e7ec;
+  --button-selected-hover-bg: #e4e7ec;
+}
+/* The tool row lies on the bar itself, no island floating on it; zoom and undo are square-cornered and ruled. */
+[data-compact-room] .excalidraw:not(#_) .App-toolbar,
+[data-compact-room] .excalidraw:not(#_) .App-toolbar.Island,
+[data-compact-room] .excalidraw:not(#_) .App-menu_top .Island {
+  border-color: transparent;
+  border-radius: 3px;
+  box-shadow: none;
+  background: transparent;
+}
+[data-compact-room] .excalidraw:not(#_) .zoom-actions,
+[data-compact-room] .excalidraw:not(#_) .undo-redo-buttons,
+[data-compact-room] .excalidraw:not(#_) .App-menu_bottom .Island {
+  border: 1px solid #dde1e7;
+  border-radius: 3px;
+  box-shadow: none;
+  background: #ffffff;
+}
+[data-compact-room] .excalidraw:not(#_) .ToolIcon__icon,
+[data-compact-room] .excalidraw:not(#_) .ToolIcon_type_button,
+[data-compact-room] .excalidraw:not(#_) .buttonList label,
+[data-compact-room] .excalidraw:not(#_) .buttonList button,
+[data-compact-room] .excalidraw:not(#_) .buttonList .zIndexButton,
+[data-compact-room] .excalidraw:not(#_) .color-picker__button,
+[data-compact-room] .excalidraw:not(#_) .zoom-button,
+[data-compact-room] .excalidraw:not(#_) .reset-zoom-button {
+  border-radius: 3px;
+}
+[data-compact-room] .excalidraw:not(#_) .ToolIcon .ToolIcon_type_radio:checked + .ToolIcon__icon,
+[data-compact-room] .excalidraw:not(#_) .ToolIcon .ToolIcon_type_checkbox:checked + .ToolIcon__icon,
+[data-compact-room] .excalidraw:not(#_) .ToolIcon_type_button.ToolIcon--selected {
+  border-color: transparent;
+  background: #eef0f3;
+  color: #1f3a5f;
+}
+[data-compact-room] .excalidraw:not(#_) .ToolIcon__keybinding,
+[data-compact-room] .excalidraw:not(#_) .HintViewer,
+[data-compact-room] .excalidraw:not(#_) .reset-zoom-button {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+[data-compact-room] .excalidraw:not(#_) .zoom-actions button,
+[data-compact-room] .excalidraw:not(#_) .undo-redo-buttons button {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+[data-compact-room] .excalidraw:not(#_) .zoom-actions button:hover:not(:disabled),
+[data-compact-room] .excalidraw:not(#_) .undo-redo-buttons button:hover:not(:disabled) {
+  background: #f5f6f8;
+}
+/* The properties drawer: flat, ruled on its edge, its labels in sentence case. */
+[data-compact-room] .excalidraw:not(#_) .App-menu__left,
+[data-compact-room] .excalidraw:not(#_) .Island.App-menu__left {
+  box-shadow: none;
+  border-right: 1px solid #dde1e7;
+  background: #ffffff;
+}
+[data-compact-room] .excalidraw:not(#_) .panelColumn h3,
+[data-compact-room] .excalidraw:not(#_) .panelColumn legend,
+[data-compact-room] .excalidraw:not(#_) .panelColumn .control-label,
+[data-compact-room] .excalidraw:not(#_) .color-picker__heading {
+  color: #5d6674;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+[data-compact-room] .excalidraw:not(#_) .buttonList label.active,
+[data-compact-room] .excalidraw:not(#_) .buttonList button.active,
+[data-compact-room] .excalidraw:not(#_) .buttonList .zIndexButton.active,
+[data-compact-room] .excalidraw:not(#_) .color-picker__button.active .color-picker__button-outline {
+  border-color: #2f5d8c;
+  background: #eef0f3;
+  box-shadow: none;
+}
