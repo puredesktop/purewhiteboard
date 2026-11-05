@@ -15,8 +15,13 @@ describe('optional file reads', () => {
         throw { code: 'ENOENT' }
       }, '/a'),
     ).toBeNull()
+    expect(
+      await readOptionalTextFile(async () => {
+        throw new Error('No such file: /Workspace/PureScience/whiteboard.whiteboard/whiteboard.whiteboard.json.')
+      }, '/a'),
+    ).toBeNull()
   })
-  it.each(['EACCES', 'EIO', 'bridge disconnected'])(
+  it.each(['EACCES', 'EIO', 'bridge disconnected', 'That is outside this document.'])(
     'preserves %s',
     async message => {
       await expect(
