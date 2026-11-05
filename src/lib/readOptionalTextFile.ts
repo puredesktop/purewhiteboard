@@ -11,7 +11,8 @@ export async function readOptionalTextFile(
         ? error.code
         : undefined
     const message = error instanceof Error ? error.message : String(error)
-    if (code === 'ENOENT' || /\bENOENT\b/.test(message)) return null
+    // The desktop reports ENOENT; PureCloud says "No such file: <path>."
+    if (code === 'ENOENT' || /\bENOENT\b|\bno such file\b/i.test(message)) return null
     throw error
   }
 }
