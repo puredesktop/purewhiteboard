@@ -1,3 +1,12 @@
+/* Follows the desk's theme: each colour is light-dark(its light value, its dark partner), the dark ones the held greys
+   of docs/held-apps.md. A light theme leaves the colour scheme as it was; a dark one says dark, and parts that asked
+   for light take --held-scheme instead. */
+[data-compact-room]:is([data-platform-theme='dark'] *),
+html[data-held-in-room]:has([data-compact-room])[data-platform-theme='dark'] {
+  color-scheme: dark;
+  --held-scheme: dark;
+}
+
 /* Compact PureWhiteboard, held inside a page (useCompactInRoom). The frame carries data-compact-room only then, and every
    rule here starts from it, so with compact off nothing in this file applies. Chrome is hidden, not removed: everything
    stays mounted, so the board, its undo and the agent's tools live on. Full app gives it all back. */
@@ -27,64 +36,64 @@
 html[data-held-in-room]:has([data-compact-room]),
 html[data-held-in-room]:has([data-compact-room]) body,
 html[data-held-in-room]:has([data-compact-room]) [data-compact-room] {
-  background: #ffffff;
+  background: light-dark(#ffffff, #1c1c1c);
 }
 html[data-held-in-room]:has([data-compact-room]) [data-compact='root'] {
-  --canvas: #ffffff;
-  --surface: #ffffff;
+  --canvas: light-dark(#ffffff, #1c1c1c);
+  --surface: light-dark(#ffffff, #1c1c1c);
 }
 
 /* The held look: one white surface edge to edge, hairlines instead of boxes, 3px corners, 13px and 12px type in sentence case,
    one muted navy for what is selected. The drawing is the user's: its colours and the board itself are left alone, and only
    the chrome around it is calmed. Tokens sit on the frame so they outrank the app's own values on the page root. */
 [data-compact-room] {
-  --platform-colors-bg: #ffffff;
-  --platform-colors-app-viewport: #ffffff;
-  --platform-colors-surface: #ffffff;
-  --platform-colors-surface-hover: #f5f6f8;
-  --platform-colors-border: #dde1e7;
-  --glass-panel: #ffffff;
-  --pure-chrome-surface: #ffffff;
-  --pure-chrome-sidebar: #ffffff;
-  --pure-chrome-bar: #ffffff;
-  --pure-chrome-well: #f5f6f8;
-  --pure-chrome-hover: #f5f6f8;
-  --pure-chrome-line: #dde1e7;
-  --pure-chrome-muted: #5d6674;
+  --platform-colors-bg: light-dark(#ffffff, #1c1c1c);
+  --platform-colors-app-viewport: light-dark(#ffffff, #1c1c1c);
+  --platform-colors-surface: light-dark(#ffffff, #1c1c1c);
+  --platform-colors-surface-hover: light-dark(#f5f6f8, #272727);
+  --platform-colors-border: light-dark(#dde1e7, #3a3a3a);
+  --glass-panel: light-dark(#ffffff, #1c1c1c);
+  --pure-chrome-surface: light-dark(#ffffff, #1c1c1c);
+  --pure-chrome-sidebar: light-dark(#ffffff, #1c1c1c);
+  --pure-chrome-bar: light-dark(#ffffff, #1c1c1c);
+  --pure-chrome-well: light-dark(#f5f6f8, #272727);
+  --pure-chrome-hover: light-dark(#f5f6f8, #272727);
+  --pure-chrome-line: light-dark(#dde1e7, #3a3a3a);
+  --pure-chrome-muted: light-dark(#5d6674, #bdbdbd);
   --pure-chrome-radius: 3px;
   --pure-chrome-ui-size: 13px;
-  background: #ffffff;
+  background: light-dark(#ffffff, #1c1c1c);
 }
 html[data-held-in-room]:has([data-compact-room]):not(#_) body {
-  background: #ffffff !important;
+  background: light-dark(#ffffff, #1c1c1c) !important;
 }
 [data-compact-room] [data-compact='root']:not(#_) {
-  --app-acc: #2f5d8c;
-  --app-bg: #eef0f3;
-  --app-text: #1f3a5f;
-  --app-block: #1f3a5f;
-  --canvas: #ffffff;
-  --surface: #ffffff;
+  --app-acc: light-dark(#2f5d8c, #7fafe3);
+  --app-bg: light-dark(#eef0f3, #2c2c2c);
+  --app-text: light-dark(#1f3a5f, #98b8e5);
+  --app-block: light-dark(#1f3a5f, #98b8e5);
+  --canvas: light-dark(#ffffff, #1c1c1c);
+  --surface: light-dark(#ffffff, #1c1c1c);
 }
 [data-compact-room] [data-compact='root'] > header {
   padding-top: 0;
   padding-bottom: 0;
-  background: #ffffff;
-  border-bottom: 1px solid #dde1e7;
+  background: light-dark(#ffffff, #1c1c1c);
+  border-bottom: 1px solid light-dark(#dde1e7, #3a3a3a);
 }
 [data-compact-room] [data-compact='root'] .excalidraw:not(#_) {
   --border-radius-md: 3px;
   --border-radius-lg: 3px;
-  --island-bg-color: #ffffff;
-  --color-surface-low: #ffffff;
-  --color-surface-mid: #f5f6f8;
-  --color-slider-track: #dde1e7;
-  --color-slider-thumb: #2f5d8c;
-  --button-gray-1: #f5f6f8;
-  --button-gray-2: #eef0f3;
-  --button-gray-3: #e4e7ec;
-  --color-primary-light-darker: #e4e7ec;
-  --button-selected-hover-bg: #e4e7ec;
+  --island-bg-color: light-dark(#ffffff, #1c1c1c);
+  --color-surface-low: light-dark(#ffffff, #1c1c1c);
+  --color-surface-mid: light-dark(#f5f6f8, #272727);
+  --color-slider-track: light-dark(#dde1e7, #3a3a3a);
+  --color-slider-thumb: light-dark(#2f5d8c, #7fafe3);
+  --button-gray-1: light-dark(#f5f6f8, #272727);
+  --button-gray-2: light-dark(#eef0f3, #2c2c2c);
+  --button-gray-3: light-dark(#e4e7ec, #3a3a3a);
+  --color-primary-light-darker: light-dark(#e4e7ec, #3a3a3a);
+  --button-selected-hover-bg: light-dark(#e4e7ec, #3a3a3a);
 }
 /* The tool row lies on the bar itself, no island floating on it; zoom and undo are square-cornered and ruled. */
 [data-compact-room] .excalidraw:not(#_) .App-toolbar,
@@ -98,10 +107,10 @@ html[data-held-in-room]:has([data-compact-room]):not(#_) body {
 [data-compact-room] .excalidraw:not(#_) .zoom-actions,
 [data-compact-room] .excalidraw:not(#_) .undo-redo-buttons,
 [data-compact-room] .excalidraw:not(#_) .App-menu_bottom .Island {
-  border: 1px solid #dde1e7;
+  border: 1px solid light-dark(#dde1e7, #3a3a3a);
   border-radius: 3px;
   box-shadow: none;
-  background: #ffffff;
+  background: light-dark(#ffffff, #1c1c1c);
 }
 [data-compact-room] .excalidraw:not(#_) .ToolIcon__icon,
 [data-compact-room] .excalidraw:not(#_) .ToolIcon_type_button,
@@ -117,8 +126,8 @@ html[data-held-in-room]:has([data-compact-room]):not(#_) body {
 [data-compact-room] .excalidraw:not(#_) .ToolIcon .ToolIcon_type_checkbox:checked + .ToolIcon__icon,
 [data-compact-room] .excalidraw:not(#_) .ToolIcon_type_button.ToolIcon--selected {
   border-color: transparent;
-  background: #eef0f3;
-  color: #1f3a5f;
+  background: light-dark(#eef0f3, #2c2c2c);
+  color: light-dark(#1f3a5f, #98b8e5);
 }
 [data-compact-room] .excalidraw:not(#_) .ToolIcon__keybinding,
 [data-compact-room] .excalidraw:not(#_) .HintViewer,
@@ -135,20 +144,20 @@ html[data-held-in-room]:has([data-compact-room]):not(#_) body {
 }
 [data-compact-room] .excalidraw:not(#_) .zoom-actions button:hover:not(:disabled),
 [data-compact-room] .excalidraw:not(#_) .undo-redo-buttons button:hover:not(:disabled) {
-  background: #f5f6f8;
+  background: light-dark(#f5f6f8, #272727);
 }
 /* The properties drawer: flat, ruled on its edge, its labels in sentence case. */
 [data-compact-room] .excalidraw:not(#_) .App-menu__left,
 [data-compact-room] .excalidraw:not(#_) .Island.App-menu__left {
   box-shadow: none;
-  border-right: 1px solid #dde1e7;
-  background: #ffffff;
+  border-right: 1px solid light-dark(#dde1e7, #3a3a3a);
+  background: light-dark(#ffffff, #1c1c1c);
 }
 [data-compact-room] .excalidraw:not(#_) .panelColumn h3,
 [data-compact-room] .excalidraw:not(#_) .panelColumn legend,
 [data-compact-room] .excalidraw:not(#_) .panelColumn .control-label,
 [data-compact-room] .excalidraw:not(#_) .color-picker__heading {
-  color: #5d6674;
+  color: light-dark(#5d6674, #bdbdbd);
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -159,7 +168,7 @@ html[data-held-in-room]:has([data-compact-room]):not(#_) body {
 [data-compact-room] .excalidraw:not(#_) .buttonList button.active,
 [data-compact-room] .excalidraw:not(#_) .buttonList .zIndexButton.active,
 [data-compact-room] .excalidraw:not(#_) .color-picker__button.active .color-picker__button-outline {
-  border-color: #2f5d8c;
-  background: #eef0f3;
+  border-color: light-dark(#2f5d8c, #7fafe3);
+  background: light-dark(#eef0f3, #2c2c2c);
   box-shadow: none;
 }
