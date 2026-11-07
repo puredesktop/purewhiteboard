@@ -156,7 +156,7 @@ const Actions = styled.footer`
 const Button = styled.button`
   height: var(--pure-chrome-control-height);
   border: 1px solid var(--app-block);
-  border-radius: 7px;
+  border-radius: var(--pure-chrome-radius, 3px);
   background: var(--app-block);
   padding: 0 12px;
   color: var(--pure-chrome-on-accent);
@@ -200,26 +200,41 @@ const CanvasHost = styled.main`
     --color-logo-icon: var(--app-acc);
     --color-brand-hover: var(--app-block);
     --color-brand-active: var(--app-block);
-    --color-on-primary-container: var(--app-text);
-    --color-surface-primary-container: var(--app-bg);
-    --button-active-bg: var(--app-bg);
-    --button-active-border: var(--app-acc);
-    --button-selected-bg: var(--app-bg);
-    --button-selected-border: var(--app-acc);
-    --button-selected-hover-bg: color-mix(in srgb, var(--app-acc) 18%, var(--pure-chrome-surface));
+    /* The chosen tool has the shared selected look: the plain chosen ground and its outline, the icon in ink. */
+    --color-on-primary-container: var(--platform-colors-text);
+    --color-surface-primary-container: var(--p-chosen, var(--app-bg));
+    --button-active-bg: var(--p-chosen, var(--app-bg));
+    --button-active-border: var(--p-mark, var(--app-acc));
+    --button-selected-bg: var(--p-chosen, var(--app-bg));
+    --button-selected-border: var(--p-mark, var(--app-acc));
+    --button-selected-hover-bg: var(--p-chosen, var(--app-bg));
+    --border-radius-md: var(--pure-chrome-radius, 3px);
+    --border-radius-lg: var(--pure-chrome-radius, 3px);
     --focus-highlight-color: color-mix(in srgb, var(--app-acc) 52%, transparent);
     --island-bg-color: var(--surface);
     --sidebar-bg-color: var(--surface);
     --default-bg-color: var(--canvas);
     --default-border-color: var(--pure-chrome-line);
     --button-gray-1: var(--pure-chrome-hover);
-    --button-gray-2: color-mix(in srgb, var(--app-acc) 14%, var(--pure-chrome-surface));
-    --button-gray-3: color-mix(in srgb, var(--app-acc) 22%, var(--pure-chrome-surface));
+    --button-gray-2: var(--pure-chrome-selection);
+    --button-gray-3: var(--pure-chrome-selection);
     --keybinding-color: var(--ink-faint);
     font-family: var(--platform-typography-font-family);
     height: 100% !important;
     background: var(--canvas);
     overflow: visible;
+  }
+
+  /* Square corners on the library's own controls; the chosen tool carries the shared outline. */
+  .excalidraw :is(.Island, .ToolIcon__icon, .zoom-actions, .undo-redo-buttons, .help-icon, .dropdown-menu-button) {
+    border-radius: var(--pure-chrome-radius, 3px) !important;
+  }
+  .excalidraw :is(.zoom-actions, .undo-redo-buttons) button { border-radius: 0 !important; }
+  /* Tool icons on the top row in the chrome's ink, so they read on a dark tool island too; the controls on the board keep the board's. */
+  .excalidraw .App-menu_top { --icon-fill-color: var(--platform-colors-text); }
+  .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon {
+    background: var(--p-chosen, var(--app-bg));
+    box-shadow: var(--p-chosen-edge, none);
   }
 
   .excalidraw .layer-ui__wrapper {
