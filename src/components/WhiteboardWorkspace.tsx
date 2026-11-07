@@ -124,13 +124,13 @@ const Header = styled.header`
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
-  /* 60, not the platform's 36: Excalidraw's tool island is drawn over this
-     row (see .App-menu_top below), and it needs the height. */
-  min-height: 60px;
+  /* 44, the height of Excalidraw's tool row, which is drawn over this row (see .App-menu_top below); no more, so the
+     board keeps the room. */
+  min-height: 44px;
   min-width: 0;
   border-bottom: 1px solid var(--pure-chrome-line);
   background: var(--pure-chrome-bar);
-  padding: 9px 16px 9px 18px;
+  padding: 0 16px 0 18px;
   font-family: var(--platform-typography-font-family);
 `
 
@@ -179,7 +179,7 @@ const Button = styled.button`
 `
 
 const CanvasHost = styled.main`
-  --whiteboard-header-height: 60px;
+  --whiteboard-header-height: 44px;
   --whiteboard-drawer-width: min(var(--pure-chrome-sidebar-width), calc(100vw - 64px));
 
   position: relative;
@@ -248,6 +248,8 @@ const CanvasHost = styled.main`
     width: 36px;
     min-width: 36px;
     height: 36px;
+    /* on the tools' centre line */
+    margin-top: 4px;
     border: 0;
     border-radius: var(--pure-chrome-radius, 3px);
     background: transparent;
@@ -304,7 +306,7 @@ const CanvasHost = styled.main`
     min-height: var(--whiteboard-header-height);
     margin: 0 -16px;
     background: transparent;
-    padding: 3px 18px;
+    padding: 0 18px;
   }
 
   /* The main menu button: inset from the edge (the top row is pulled out by
@@ -313,7 +315,7 @@ const CanvasHost = styled.main`
     width: 32px;
     height: 32px;
     /* Centred on the tool island beside it. */
-    margin: 7px 0 0 10px;
+    margin: 6px 0 0 10px;
     border: 1px solid var(--pure-chrome-line);
     border-radius: var(--pure-chrome-radius);
     background: var(--pure-chrome-surface);
