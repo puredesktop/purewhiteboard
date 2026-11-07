@@ -225,17 +225,74 @@ const CanvasHost = styled.main`
     overflow: visible;
   }
 
-  /* Square corners on the library's own controls; the chosen tool carries the shared outline. */
+  /* Square corners on the library's own controls. */
   .excalidraw :is(.Island, .ToolIcon__icon, .zoom-actions, .undo-redo-buttons, .help-icon, .dropdown-menu-button) {
     border-radius: var(--pure-chrome-radius, 3px) !important;
   }
   .excalidraw :is(.zoom-actions, .undo-redo-buttons) button { border-radius: 0 !important; }
   /* Tool icons on the top row in the chrome's ink, so they read on a dark tool island too; the controls on the board keep the board's. */
   .excalidraw .App-menu_top { --icon-fill-color: var(--platform-colors-text); }
+  /* The tool in hand is pressed, as a tool that is on is in every app: grey, the icon in ink, no outline. */
   .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon {
-    background: var(--p-chosen, var(--app-bg));
-    box-shadow: var(--p-chosen-edge, none);
+    background: var(--n-selected, var(--pure-chrome-selection));
+    box-shadow: none;
   }
+  /* The tool row belongs to the toolbar band, as in the other apps: no floating card round it, and the library button
+     is one of the tools, not a box of its own. */
+  .excalidraw .App-menu_top .App-toolbar {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .excalidraw .App-menu_top .sidebar-trigger {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--pure-chrome-radius, 3px);
+    background: transparent;
+    box-shadow: none;
+  }
+  /* The more-tools (shapes) button drew its icon in the library's light-page ink, so it vanished on the dark tool row. */
+  .excalidraw .App-menu_top .App-toolbar__extra-tools-trigger {
+    color: var(--platform-colors-text);
+    background: transparent;
+    box-shadow: none;
+  }
+  .excalidraw .App-menu_top .sidebar-trigger:hover { background: var(--n-hover, var(--pure-chrome-hover)); }
+  /* The board's controls (zoom, undo, help) are raised plain buttons on a firm edge: white, the icons and figures in ink.
+     They sit on the board, which stays a light page in dark mode too, so they keep the light neutrals in both modes. */
+  .excalidraw :is(.layer-ui__wrapper__footer-left, .layer-ui__wrapper__footer-right, .help-icon) {
+    --board-sheet: #ffffff;
+    --board-hover: #eef0f2;
+    --board-pressed: #e6e8eb;
+    --board-ink: #14171a;
+    --board-line: #c3c8cf;
+    --board-foot: #a7adb5;
+    --button-gray-1: var(--board-sheet);
+    --button-gray-2: var(--board-hover);
+    --button-gray-3: var(--board-pressed);
+    --button-bg: var(--board-sheet);
+    --button-hover-bg: var(--board-hover);
+    --color-surface-low: var(--board-sheet);
+    --color-surface-mid: var(--board-hover);
+    --color-surface-high: var(--board-pressed);
+    --icon-fill-color: var(--board-ink);
+    --text-primary-color: var(--board-ink);
+    color: var(--board-ink);
+  }
+  .excalidraw :is(.zoom-actions, .undo-redo-buttons, .help-icon) {
+    border: 1px solid var(--board-line);
+    border-bottom-color: var(--board-foot);
+    background: var(--board-sheet);
+    box-shadow: 0 1px 1px rgb(0 0 0 / 0.08);
+  }
+  .excalidraw :is(.zoom-actions, .undo-redo-buttons) button {
+    background: var(--board-sheet) !important;
+    color: var(--board-ink);
+  }
+  .excalidraw :is(.zoom-actions, .undo-redo-buttons) button:hover:not(:disabled) { background: var(--board-hover) !important; }
+  .excalidraw .zoom-actions .reset-zoom-button { font-family: var(--platform-typography-font-family); font-weight: 600; }
 
   .excalidraw .layer-ui__wrapper {
     top: calc(-1 * var(--whiteboard-header-height));
