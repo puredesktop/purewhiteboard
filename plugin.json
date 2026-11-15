@@ -291,7 +291,7 @@
         },
         {
           "name": "exportImage",
-          "risk": "external",
+          "risk": "write",
           "description": "Export the whole board as a PNG into the package's assets/exports folder (saving the board first if it has never been saved). Returns the file path. Refuses when the board is empty.",
           "inputSchema": {
             "type": "object",
