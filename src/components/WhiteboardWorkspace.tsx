@@ -62,6 +62,8 @@ import {
   type WhiteboardSceneDocument,
 } from '../lib/whiteboardPackage'
 import type { PureWhiteboardBootState, WhiteboardResource } from '../types'
+import { WorkspaceThreadStrip, type TransformEnvelope } from '@purescience/platform-ui/suite'
+import { buildStickyElementsFromTransform, sendBoardToApp } from '../lib/boardTransform'
 
 interface WhiteboardWorkspaceProps {
   ready: boolean
@@ -1291,8 +1293,53 @@ export function WhiteboardWorkspace({
         </CanvasHost>
         <Actions {...compactPart(compact, 'hide')}>
           <Meta role="status" title={packagePath}>{status}</Meta>
+          <Button
+            type="button"
+            disabled={!api}
+            onClick={() => {
+              const elements = api?.getSceneElements() ?? []
+              const title = packagePath ? whiteboardPackageBaseName(packagePath) : 'Whiteboard Plan'
+              void sendBoardToApp(title, elements, 'pureslides').then(() => setStatus('Sent board to PureSlides.'))
+            }}
+          >
+            To PureSlides
+          </Button>
+          <Button
+            type="button"
+            disabled={!api}
+            onClick={() => {
+              const elements = api?.getSceneElements() ?? []
+              const title = packagePath ? whiteboardPackageBaseName(packagePath) : 'Whiteboard Plan'
+              void sendBoardToApp(title, elements, 'purewriter').then(() => setStatus('Sent board to PureWriter.'))
+            }}
+          >
+            To PureWriter
+          </Button>
+          <Button
+            type="button"
+            disabled={!api}
+            onClick={() => {
+              const elements = api?.getSceneElements() ?? []
+              const title = packagePath ? whiteboardPackageBaseName(packagePath) : 'Whiteboard Plan'
+              void sendBoardToApp(title, elements, 'puretasks').then(() => setStatus('Sent actions to PureTasks.'))
+            }}
+          >
+            To PureTasks
+          </Button>
           <Button type="button" disabled={!api} onClick={handleExport}>Export PNG</Button>
         </Actions>
+        {!compact && (
+          <WorkspaceThreadStrip
+            app="purewhiteboard"
+            onApplyTransform={(env: TransformEnvelope) => {
+              if (!api) return
+              const existing = api.getSceneElements()
+              const added = buildStickyElementsFromTransform(env)
+              api.updateScene({ elements: [...existing, ...added] })
+              setStatus(`Mapped "${env.title}" (${added.length} cards) onto board.`)
+            }}
+          />
+        )}
       </Root>
       <DocumentSwitcher
         appSlug="whiteboard"
