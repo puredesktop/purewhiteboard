@@ -1582,9 +1582,10 @@ export const fn_refineBoard: AppFunctionDefinition<WhiteboardAgentContext> =
           referencedEndpoints.set(conn.toId, workingById.get(conn.toId)!)
         }
 
-        const batchSpecs: Array<Record<string, unknown>> = [
-          ...referencedEndpoints.values().map(el => ({ ...el })),
-        ]
+        const batchSpecs: Array<Record<string, unknown>> = Array.from(
+          referencedEndpoints.values(),
+          el => ({ ...el }),
+        )
 
         for (const conn of parsedConnections) {
           const arrowId = makeUniqueId(usedIds, 'arrow')
