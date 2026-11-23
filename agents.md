@@ -79,26 +79,39 @@ not determine the layout" is a failure.
 
 ### Sketching a diagram
 
-1. `getWhiteboardContext` first — element count, selection, and the
-   existing shapes, arrows, and text — so new work composes with what
-   is on the board instead of landing on top of it.
-2. Place the nodes: `addShape` (rectangle, ellipse, diamond) with
-   labels, positioned to leave room for the connections; `addText` for
-   free labels and headings.
-3. Connect: `connect` draws labelled arrows between existing elements
-   by id — place both ends before wiring them.
+1. Call `getWhiteboardContext` or `fn_analyzeBoard` first — element count,
+   selection, `document.packagePath`, active color palette, and existing
+   shapes/arrows/clusters — so new work composes with what is on the board
+   instead of landing on top of it.
+2. Prefer composite App Functions for multi-element work (each commits as a
+   single ⌘Z step and saves automatically):
+   - `fn_buildDiagram` builds a complete auto-laid-out flowchart, architecture
+     sketch, or process map (optional title, labelled shapes, and bound
+     labelled arrows) in one call.
+   - `fn_createStickyBoard` creates brainstorming, affinity-map, retrospective,
+     or kanban sticky-note columns/clusters in one call.
+   - `fn_refineBoard` batch-restyles existing elements, wires multiple bound
+     arrows, adds annotations, and optionally nudges overlapping free-text
+     labels apart in one call.
+3. For single-element edge cases, discover and invoke specialist tools via
+   `discoverAppTools` + `callExtendedReadTool` / `callExtendedTool`
+   (`addShape`, `addText`, `connect`, `styleElement`, `openWhiteboard`,
+   `saveWhiteboard`, `removeElement`, `clearWhiteboard`).
 4. Report what the sketch shows in a sentence, with the assumptions
    taken.
 
 ### Refining and exporting
 
 - Build on what exists: extend the user's own sketch in its visual
-  style rather than starting a parallel diagram beside it.
+  style (read via `fn_analyzeBoard`'s `palette`) rather than starting a
+  parallel diagram beside it.
 - Which colors and density the user likes is learned from their
   corrections over time; until then, restrained — color for meaning,
   not decoration.
-- `styleElement` recolors, re-strokes or fades one element by id —
-  color for meaning, applied to what exists rather than redrawn.
+- `fn_refineBoard` (or extended `styleElement`) recolors, re-strokes or fades
+  elements by id — color for meaning, applied to what exists rather than
+  redrawn — and can separate overlapping free-text labels with
+  `resolveTextOverlaps: true`.
 - `exportImage` writes a PNG into the board's package, under
   `assets/exports` — report the path it returns.
 
@@ -133,33 +146,49 @@ shape, and an arrow reports the ids it is bound to.
 
 ## Tools
 
+PureWhiteboard uses 3-tier exposure (4 composite App Functions + 3 core atomic
+tools + 3 universal escape-hatch meta-tools for 8 extended specialist tools):
+
+### Composite App Functions (prefer these first)
+
+| Task | Function |
+| --- | --- |
+| Analyze graph topology, spatial clusters, palette, and export readiness | `fn_analyzeBoard` |
+| Build a complete auto-laid-out diagram (title, shapes, bound arrows) in 1 call | `fn_buildDiagram` |
+| Create a color-coded brainstorming / affinity / retro sticky-note board in 1 call | `fn_createStickyBoard` |
+| Batch-restyle elements, wire arrows, add annotations, or separate overlapping text | `fn_refineBoard` |
+
+### Core Atomic Tools (directly exposed)
+
 | Task | Tool |
 | --- | --- |
-| What is on the board, the ids, what is selected | `getWhiteboardContext` |
-| Add a rectangle, ellipse or diamond, optionally labelled | `addShape` |
-| Add free text or a heading | `addText` |
-| Draw a labelled arrow bound to two elements | `connect` |
-| Recolor, re-stroke or fade one element | `styleElement` |
-| Delete one element (and its label) | `removeElement` |
-| Erase the board (`confirm: true`, at the user's request) | `clearWhiteboard` |
-| Write a PNG of the board into its package | `exportImage` |
+| What is on the board, the ids, `document.packagePath`, and `textOverlaps` | `getWhiteboardContext` |
+| Create and open a new saved `.whiteboard` package in Drafts | `createWhiteboard` |
+| Write a PNG of the board into its package (`assets/exports`) | `exportImage` |
+
+### Extended Specialist Tools (via `discoverAppTools` + `callExtendedReadTool` / `callExtendedTool`)
+
+- Read-only (`callExtendedReadTool`): `openWhiteboard`
+- Write (`callExtendedTool`): `saveWhiteboard`, `addShape`, `addText`, `connect`, `styleElement`
+- Destructive (`callExtendedTool` with `confirmDestructive: true`, only at the user's direction): `removeElement`, `clearWhiteboard` (also requires `confirm: true`)
 
 ## Read-First Workflow
 
-Always read before you write. `getWhiteboardContext` returns the
-element list with ids — the ids `connect`, `styleElement` and
-`removeElement` need.
+Always read before you write. `getWhiteboardContext` (or `fn_analyzeBoard`)
+returns `document.packagePath` and the live element IDs that `fn_refineBoard`,
+`connect`, `styleElement` and `removeElement` need.
 Resolve "those boxes", "the login step" against the live scene by
 label, never memory of earlier turns.
 
 ## Write Safety
 
-`addShape`, `addText`, `connect` and `styleElement` compose with the
-scene and are the safe defaults — sketch confidently on stated
-assumptions. `removeElement` deletes one element by id (its label goes
-with it; attached arrows stay, unbound); `clearWhiteboard` erases
-everything and refuses without `confirm: true`; both only at the user's
-direction, naming what goes.
+`fn_buildDiagram`, `fn_createStickyBoard`, `fn_refineBoard`, `addShape`,
+`addText`, `connect` and `styleElement` compose with the scene and are the safe
+defaults — sketch confidently on stated assumptions. Extended `removeElement`
+deletes one element by id (its label goes with it; attached arrows stay,
+unbound); extended `clearWhiteboard` erases everything and refuses without
+`confirm: true` (and `confirmDestructive: true` on `callExtendedTool`); both
+only at the user's direction, naming what goes.
 
 ## Output Style
 

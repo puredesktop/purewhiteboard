@@ -47,7 +47,361 @@
     "agents": {
       "tools": [
         {
+          "name": "fn_analyzeBoard",
+          "risk": "read",
+          "description": "Inspect the current whiteboard in one structured pass: returns document.packagePath, element counts, bounding box, next free placement origin, directed graph topology (nodes, bound edges, entry/terminal/decision/isolated nodes, unbound arrows), spatial proximity clusters, active color palette, and export-readiness text-overlap diagnostics.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "clusterGapPx": {
+                "type": "number",
+                "description": "Proximity threshold in scene units used to group nearby elements into spatial clusters (default 120)."
+              },
+              "includeElements": {
+                "type": "boolean",
+                "description": "Include the full addressable element list alongside the structured graph and cluster summaries (default false)."
+              }
+            }
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "fn_buildDiagram",
+          "risk": "write",
+          "description": "Build a complete auto-laid-out diagram, flowchart, or architecture sketch (optional title, labelled shapes, and bound labelled arrows) in one atomic undoable step and save it. Call getWhiteboardContext first to inspect the board and obtain document.packagePath. Automatically places the diagram clear of existing content with collision-free spacing and returns created IDs and text-overlap status.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext, fn_analyzeBoard, or createWhiteboard. Refuses if the tab changed documents."
+              },
+              "title": {
+                "type": "string",
+                "description": "Optional heading text placed cleanly above the diagram."
+              },
+              "layout": {
+                "type": "string",
+                "enum": [
+                  "left-to-right",
+                  "top-to-bottom",
+                  "grid"
+                ],
+                "description": "Automatic layout direction (default \"left-to-right\")."
+              },
+              "nodes": {
+                "type": "array",
+                "description": "Diagram nodes to create (1 to 40). Each node needs a unique key and label.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "description": "Unique local key referenced by edges."
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "Label text inside the shape."
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "rectangle",
+                        "ellipse",
+                        "diamond"
+                      ],
+                      "description": "Shape geometry (default \"rectangle\")."
+                    },
+                    "backgroundColor": {
+                      "type": "string",
+                      "description": "Hex fill, named Excalidraw color, or \"transparent\"."
+                    },
+                    "strokeColor": {
+                      "type": "string",
+                      "description": "Stroke color (default \"#1e1e1e\")."
+                    },
+                    "width": {
+                      "type": "number"
+                    },
+                    "height": {
+                      "type": "number"
+                    },
+                    "lane": {
+                      "type": "string",
+                      "description": "Optional swimlane name to align parallel tracks."
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "label"
+                  ]
+                }
+              },
+              "edges": {
+                "type": "array",
+                "description": "Optional directed bound arrows connecting node keys or existing board element IDs.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "description": "Source node key or existing board element ID."
+                    },
+                    "to": {
+                      "type": "string",
+                      "description": "Target node key or existing board element ID."
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "Optional arrow label."
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to"
+                  ]
+                }
+              },
+              "origin": {
+                "type": "object",
+                "description": "Optional top-left anchor { x, y }; omitted defaults to clear space beside existing elements.",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                }
+              },
+              "gapX": {
+                "type": "number",
+                "description": "Horizontal gap between nodes in scene units (default 90)."
+              },
+              "gapY": {
+                "type": "number",
+                "description": "Vertical gap between nodes in scene units (default 70)."
+              }
+            },
+            "required": [
+              "packagePath",
+              "nodes"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "fn_createStickyBoard",
+          "risk": "write",
+          "description": "Create a structured brainstorming, affinity-map, retrospective, or kanban sticky-note board with color-coded themed columns or cluster grids in one atomic undoable step and save it. Call getWhiteboardContext first to inspect the board and obtain document.packagePath. Automatically sizes sticky cards and places the board clear of existing content.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext, fn_analyzeBoard, or createWhiteboard. Refuses if the tab changed documents."
+              },
+              "boardTitle": {
+                "type": "string",
+                "description": "Optional overall title placed above the sticky groups."
+              },
+              "groups": {
+                "type": "array",
+                "description": "Themed sticky-note columns or clusters (1 to 12 groups).",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "description": "Header label for the column or cluster."
+                    },
+                    "color": {
+                      "type": "string",
+                      "description": "Optional fill color for notes in this group (defaults to a curated pastel palette)."
+                    },
+                    "strokeColor": {
+                      "type": "string",
+                      "description": "Optional border stroke color for this group."
+                    },
+                    "notes": {
+                      "type": "array",
+                      "description": "Sticky notes in this group: strings or { text, color?, strokeColor? } objects.",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "color": {
+                                "type": "string"
+                              },
+                              "strokeColor": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "text"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "notes"
+                  ]
+                }
+              },
+              "arrangement": {
+                "type": "string",
+                "enum": [
+                  "columns",
+                  "grid"
+                ],
+                "description": "Lay groups side-by-side as vertical columns (default \"columns\") or wrap into a 2D cluster grid (\"grid\")."
+              },
+              "noteWidth": {
+                "type": "number",
+                "description": "Sticky card width in scene units (default 220)."
+              },
+              "origin": {
+                "type": "object",
+                "description": "Optional top-left anchor { x, y }; omitted defaults to clear space beside existing elements.",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "required": [
+              "packagePath",
+              "groups"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "fn_refineBoard",
+          "risk": "write",
+          "description": "Batch-refine an existing whiteboard in one atomic undoable step and save it: apply style changes across multiple elements, wire multiple bound labelled arrows, add free-text annotations, and optionally separate overlapping free-text labels for export readiness. Call getWhiteboardContext first to inspect element IDs and obtain document.packagePath.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "packagePath": {
+                "type": "string",
+                "description": "Exact document.packagePath from getWhiteboardContext, fn_analyzeBoard, or createWhiteboard. Refuses if the tab changed documents."
+              },
+              "styles": {
+                "type": "array",
+                "description": "Batch style rules; each rule applies fill, stroke, strokeWidth, or opacity to one or more existing element IDs.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Existing element IDs to restyle."
+                    },
+                    "backgroundColor": {
+                      "type": "string"
+                    },
+                    "strokeColor": {
+                      "type": "string"
+                    },
+                    "strokeWidth": {
+                      "type": "number"
+                    },
+                    "opacity": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "ids"
+                  ]
+                }
+              },
+              "connections": {
+                "type": "array",
+                "description": "Batch bound arrows to add between existing bindable elements.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fromId": {
+                      "type": "string"
+                    },
+                    "toId": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "fromId",
+                    "toId"
+                  ]
+                }
+              },
+              "annotations": {
+                "type": "array",
+                "description": "Free-text callouts or notes to add to the scene.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "fontSize": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              },
+              "resolveTextOverlaps": {
+                "type": "boolean",
+                "description": "When true, automatically nudges colliding free-text elements vertically apart while preserving their exact text verbatim."
+              }
+            },
+            "required": [
+              "packagePath"
+            ]
+          },
+          "requiresApproval": false
+        },
+        {
+          "name": "getWhiteboardContext",
+          "risk": "read",
+          "description": "Read the current whiteboard: elementCount, selectedElementIds, and the elements with id, type, position, size, text (a free text, or the label of a shape or arrow), from/to (the ids an arrow is bound to) and colors. Call this first — connect, styleElement and removeElement need ids from it; labels attached to a shape are reported on the shape, not as separate elements.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "requiresApproval": false
+        },
+        {
           "name": "createWhiteboard",
+          "risk": "write",
           "description": "Create and open a separate saved whiteboard in the workspace Drafts folder. This is the normal output location; source fixture folders need not hold outputs. Returns its real packagePath without clearing prior work.",
           "inputSchema": {
             "type": "object",
@@ -63,236 +417,9 @@
           "requiresApproval": false
         },
         {
-          "name": "openWhiteboard",
-          "risk": "read",
-          "description": "Validate and open an existing whiteboard package. Returns its real packagePath.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "path": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "path"
-            ]
-          },
-          "requiresApproval": false
-        },
-        {
-          "name": "saveWhiteboard",
-          "description": "Flush the current scene to disk and validate the saved scene; returns packagePath.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "packagePath": {
-                "type": "string",
-                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
-              }
-            },
-            "required": [
-              "packagePath"
-            ]
-          },
-          "requiresApproval": false
-        },
-        {
-          "name": "getWhiteboardContext",
-          "risk": "read",
-          "description": "Read the current whiteboard: elementCount, selectedElementIds, and the elements with id, type, position, size, text (a free text, or the label of a shape or arrow), from/to (the ids an arrow is bound to) and colors. Call this first \u2014 connect, styleElement and removeElement need ids from it; labels attached to a shape are reported on the shape, not as separate elements.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {}
-          },
-          "requiresApproval": false
-        },
-        {
-          "name": "addShape",
-          "description": "Add a rectangle, ellipse or diamond, optionally labelled. x/y/width/height are in scene units; when x and y are omitted the shape is placed to the right of the existing content. Returns the new id.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "shape": {
-                "type": "string",
-                "enum": [
-                  "rectangle",
-                  "ellipse",
-                  "diamond"
-                ]
-              },
-              "x": {
-                "type": "number"
-              },
-              "y": {
-                "type": "number"
-              },
-              "width": {
-                "type": "number"
-              },
-              "height": {
-                "type": "number"
-              },
-              "label": {
-                "type": "string"
-              },
-              "backgroundColor": {
-                "type": "string",
-                "description": "Hex fill, named Excalidraw color, or transparent."
-              },
-              "strokeColor": {
-                "type": "string"
-              },
-              "packagePath": {
-                "type": "string",
-                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
-              }
-            },
-            "required": [
-              "shape",
-              "packagePath"
-            ]
-          },
-          "requiresApproval": false
-        },
-        {
-          "name": "addText",
-          "description": "Add a free text label. When x and y are omitted it is placed to the right of the existing content. Returns the new id.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "text": {
-                "type": "string"
-              },
-              "x": {
-                "type": "number"
-              },
-              "y": {
-                "type": "number"
-              },
-              "fontSize": {
-                "type": "number"
-              },
-              "packagePath": {
-                "type": "string",
-                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
-              }
-            },
-            "required": [
-              "text",
-              "packagePath"
-            ]
-          },
-          "requiresApproval": false
-        },
-        {
-          "name": "connect",
-          "description": "Draw an arrow bound to two existing elements by id (shapes, text or images \u2014 not another arrow), optionally labelled. Bound arrows follow their elements when the user moves them. Place both ends before connecting.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "fromId": {
-                "type": "string"
-              },
-              "toId": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "packagePath": {
-                "type": "string",
-                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
-              }
-            },
-            "required": [
-              "fromId",
-              "toId",
-              "packagePath"
-            ]
-          },
-          "requiresApproval": false
-        },
-        {
-          "name": "styleElement",
-          "description": "Restyle one element by id: backgroundColor (hex, Excalidraw color name, or \"transparent\"), strokeColor, strokeWidth in px, opacity 0-100. At least one of the four is required; position, size and text are the user's to edit on the canvas.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "backgroundColor": {
-                "type": "string"
-              },
-              "strokeColor": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "type": "number"
-              },
-              "opacity": {
-                "type": "number"
-              },
-              "packagePath": {
-                "type": "string",
-                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
-              }
-            },
-            "required": [
-              "id",
-              "packagePath"
-            ]
-          },
-          "requiresApproval": false
-        },
-        {
-          "name": "removeElement",
-          "risk": "destructive",
-          "description": "Delete one element by id, together with its label; arrows attached to it stay but are unbound from it. Only at the user's direction.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "packagePath": {
-                "type": "string",
-                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
-              }
-            },
-            "required": [
-              "id",
-              "packagePath"
-            ]
-          },
-          "requiresApproval": true
-        },
-        {
-          "name": "clearWhiteboard",
-          "risk": "destructive",
-          "description": "Erase every element. Refuses while the board holds work unless confirm is true \u2014 pass it only when the user asked to start over. The user can undo with \u2318Z in the canvas.",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "confirm": {
-                "type": "boolean",
-                "description": "Must be true to erase a board that holds elements."
-              },
-              "packagePath": {
-                "type": "string",
-                "description": "Exact document.packagePath from getWhiteboardContext or createWhiteboard. Refuses if the tab changed documents."
-              }
-            },
-            "required": [
-              "packagePath"
-            ]
-          },
-          "requiresApproval": true
-        },
-        {
           "name": "exportImage",
           "risk": "write",
-          "description": "Export the whole board as a PNG into the package's assets/exports folder (saving the board first if it has never been saved). Returns the file path. Refuses when the board is empty.",
+          "description": "Export the whole board as a PNG into the package's assets/exports folder (saving the board first if it has never been saved). Call getWhiteboardContext first to verify textOverlaps is empty and obtain document.packagePath. Returns the file path and refuses when the board is empty.",
           "inputSchema": {
             "type": "object",
             "properties": {
@@ -310,6 +437,87 @@
             ]
           },
           "requiresApproval": true
+        },
+        {
+          "name": "discoverAppTools",
+          "risk": "read",
+          "requiresApproval": false,
+          "description": "Discover PureWhiteboard's extended specialist tools (8 tools across canvas, document, styling) and composite functions (4 workflows). Prefer calling exposed composite functions and core tools first; use discoverAppTools when an edge case needs a specialist tool, then call it via callExtendedReadTool (for read-only tools) or callExtendedTool (for mutating tools).",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Optional keywords describing the capability you need (e.g. \"canvas\", \"document\", \"styling\")."
+              },
+              "category": {
+                "type": "string",
+                "description": "Optional category filter (canvas, document, styling, or \"all\")."
+              },
+              "names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Optional exact tool names to fetch full JSON input schemas for."
+              },
+              "includeFunctions": {
+                "type": "boolean",
+                "description": "Include already-exposed composite functions and core tools in the listing (default false: searches extended tools first)."
+              }
+            }
+          }
+        },
+        {
+          "name": "callExtendedReadTool",
+          "risk": "read",
+          "requiresApproval": false,
+          "description": "Call one of PureWhiteboard's read-only extended specialist tools discovered via discoverAppTools (categories: canvas, document, styling). Strictly refuses mutating, destructive, external, or release tools.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string",
+                "description": "Exact name of a read-only extended tool from discoverAppTools."
+              },
+              "arguments": {
+                "type": "object",
+                "description": "Arguments object matching the tool’s inputSchema."
+              }
+            },
+            "required": [
+              "tool"
+            ]
+          }
+        },
+        {
+          "name": "callExtendedTool",
+          "risk": "write",
+          "requiresApproval": true,
+          "riskWhen": {
+            "confirmDestructive": "destructive"
+          },
+          "description": "Call one of PureWhiteboard's mutating extended specialist tools discovered via discoverAppTools (categories: canvas, document, styling). For destructive tools, set confirmDestructive: true after checking with the user. Strictly refuses read-only tools (use callExtendedReadTool), external tools, permanent-delete tools, and release tools.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string",
+                "description": "Exact name of a mutating extended tool from discoverAppTools."
+              },
+              "arguments": {
+                "type": "object",
+                "description": "Arguments object matching the tool’s inputSchema."
+              },
+              "confirmDestructive": {
+                "type": "boolean",
+                "description": "Required (true) when calling an extended tool marked risk: \"destructive\"."
+              }
+            },
+            "required": [
+              "tool"
+            ]
+          }
         }
       ]
     }
