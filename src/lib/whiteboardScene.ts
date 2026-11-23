@@ -121,10 +121,10 @@ export class WhiteboardToolError extends Error {
   }
 }
 
-const SHAPES: WhiteboardShape[] = ['rectangle', 'ellipse', 'diamond']
+export const SHAPES: WhiteboardShape[] = ['rectangle', 'ellipse', 'diamond']
 
 /** Element types an arrow can bind to (Excalidraw's bindable set). */
-const BINDABLE_TYPES = new Set([
+export const BINDABLE_TYPES = new Set([
   'rectangle',
   'ellipse',
   'diamond',
@@ -158,7 +158,7 @@ function requiredString(value: unknown, label: string): string {
   return text
 }
 
-function liveElements(api: WhiteboardApiLike): WhiteboardElementLike[] {
+export function liveElements(api: WhiteboardApiLike): WhiteboardElementLike[] {
   return api.getSceneElements().filter(element => !element.isDeleted)
 }
 
@@ -176,7 +176,7 @@ function findElement(
 }
 
 /** A changed copy Excalidraw will re-render: new version, nonce and timestamp. */
-function touched(
+export function touched(
   element: WhiteboardElementLike,
   patch: Partial<WhiteboardElementLike>,
 ): WhiteboardElementLike {
@@ -193,7 +193,7 @@ function touched(
  * The one write path for agent edits: replaces the scene and records the
  * change immediately so ⌘Z undoes an agent's step like the user's own.
  */
-function commit(
+export function commit(
   api: WhiteboardApiLike,
   elements: readonly WhiteboardElementLike[],
 ): void {
@@ -211,7 +211,7 @@ function shapeFromInput(value: unknown): WhiteboardShape {
   throw new WhiteboardToolError(`shape must be one of: ${SHAPES.join(', ')}`)
 }
 
-function createdElements(
+export function createdElements(
   specs: Array<Record<string, unknown>>,
   options?: { regenerateIds: boolean },
 ): WhiteboardElementLike[] {
